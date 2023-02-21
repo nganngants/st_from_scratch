@@ -297,8 +297,13 @@ def decoder(target, state, params, labels=None):
 
         # batch x seq x dim
         encoding = state['encodes']
-        # adding one more symbol for blank
-        enc_logits = func.linear(encoding, params.tgt_vocab.size() + 1, scope="ctc_mapper")
+        # CTC projection: adding one more symbol for blank
+        ctc_label_size = params.src_vocab.size() + 1
+        # Supporting CoLaCTC
+        if params.cola_ctc_L > 0:
+            ctc_label_size = params.cola_ctc_L + 1
+
+        enc_logits = func.linear(encoding, ctc_label_size, scope="ctc_mapper")
         # seq dimension transpose
         enc_logits = tf.transpose(enc_logits, (1, 0, 2))
 

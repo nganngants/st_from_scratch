@@ -235,6 +235,10 @@ global_params = tc.training.HParams(
     dec_localize="none",
     encdec_localize="none",
 
+    # cola ctc settings
+    # -1: disable cola ctc, in our paper we set 256.
+    cola_ctc_L=-1,
+
     # neural acoustic feature modeling
     use_nafm=False,
     nafm_alpha=0.05,

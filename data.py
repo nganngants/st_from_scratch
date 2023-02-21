@@ -144,7 +144,12 @@ class Dataset(object):
             sequence = sample[3][:ctc_len]
 
             seq_indexes.extend(zip([n] * len(sequence), range(len(sequence))))
-            seq_values.extend(sequence)
+            # apply CoLaCTC (MoD)
+            if self.p.cola_ctc_L < 0:
+              seq_values.extend(sequence)
+            else:
+              # i.e. a very simple mod operation
+              seq_values.extend([v % self.p.cola_ctc_L for v in sequence])
 
         seq_indexes = np.asarray(seq_indexes, dtype=np.int64)
         seq_values = np.asarray(seq_values, dtype=np.int32)

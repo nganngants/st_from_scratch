@@ -7,6 +7,7 @@
 [**Model**](#pretrained-models) |
 [**Training&Eval**](#training-and-evaluation) |
 [**Citation**](#citation)
+[**Updates**](#updates)
 
 This repository contains source code, models, and also instructions for our ICML paper. 
 
@@ -14,6 +15,11 @@ This repository contains source code, models, and also instructions for our ICML
 alone without using transcripts or any type of pretraining.
 
 >By pretraining, we mainly refer to ASR/MT pretraining using the triplet training data.
+
+## Updates
+
+* [2023/02/21] Add support to CoLaCTC, using pseudo labels for regularization
+* [2023/02/21] Add support to flexible CTC labels, such as using transcript as labels
 
 ## Paper Highlights
 
