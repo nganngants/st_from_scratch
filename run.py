@@ -152,6 +152,8 @@ global_params = tc.training.HParams(
     src_train_file="",
     # target train file
     tgt_train_file="",
+    # ctc train file
+    ctc_train_file="",
     # source development file
     src_dev_path="",
     src_dev_file="",

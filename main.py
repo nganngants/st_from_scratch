@@ -26,7 +26,8 @@ def tower_train_graph(train_features, optimizer, graph, params):
             features, params, initializer=initializer.get_initializer(params.initializer, params.initializer_gain))
 
         tower_gradients = optimizer.compute_gradients(
-            train_output["loss"] * tf.cast(params.loss_scale, tf.float32), colocate_gradients_with_ops=True)
+            train_output["loss"] * tf.cast(params.loss_scale, tf.float32),
+            colocate_gradients_with_ops=True)
         tower_gradients = [(g / tf.cast(params.loss_scale, tf.float32), v) for g, v in tower_gradients]
 
         return {
@@ -90,6 +91,7 @@ def train(params):
     start_time = time.time()
     train_dataset = Dataset(params, params.src_train_file, params.tgt_train_file,
                             params.src_vocab, params.tgt_vocab,
+                            ctc_file=params.ctc_train_file,
                             batch_or_token=params.batch_or_token,
                             data_leak_ratio=params.data_leak_ratio,
                             src_audio_path=params.src_train_path)
@@ -171,7 +173,8 @@ def train(params):
 
         # restore parameters
         tf.logging.info("Trying restore ASR existing parameters")
-        train_saver.restore(sess, path=params.asr_pretrain, filter_variables=params.filter_variables)
+        train_saver.restore(
+            sess, path=params.asr_pretrain, filter_variables=params.filter_variables)
 
         tf.logging.info("Trying restore existing parameters")
         train_saver.restore(sess)
@@ -210,7 +213,8 @@ def train(params):
                         segments = params.recorder.lidx // 5
                         if params.recorder.lidx < 5 or lidx % segments == 0:
                             tf.logging.info(
-                                "{} Passing {}-th index according to record".format(util.time_str(time.time()), lidx))
+                                "{} Passing {}-th index according to record"
+                                "".format(util.time_str(time.time()), lidx))
 
                         continue
 
@@ -271,7 +275,7 @@ def train(params):
                             params.recorder.estop = True
                             break
                     else:
-                        # Notice, applying safe nan can help train the big model, but sacrifice speed
+                        # Note, applying safe nan can help train the big model, but sacrifice speed
                         loss, gnorm, pnorm, gstep = sess.run(
                             [vle["loss"], vle["gradient_norm"], vle["parameter_norm"], global_step],
                             feed_dict=feed_dicts)
@@ -371,8 +375,6 @@ def train(params):
                         tranes, scores = evalu.decode_hypothesis(decode_seqs, decode_scores, params)
 
                         for sidx in range(min(5, len(scores))):
-                            # sample_source = evalu.decode_target_token(data['src'][sidx], params.src_vocab)
-                            # tf.logging.info("{}-th Source: {}".format(sidx, ' '.join(sample_source)))
                             sample_target = evalu.decode_target_token(data['tgt'][sidx], params.tgt_vocab)
                             tf.logging.info("{}-th Target: {}".format(sidx, ' '.join(sample_target)))
                             sample_trans = tranes[sidx]
