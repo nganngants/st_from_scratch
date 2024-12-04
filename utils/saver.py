@@ -24,7 +24,7 @@ class Saver(object):
             max_to_keep=checkpoints
         )
         # handle disrupted checkpoints
-        if tf.gfile.Exists(self.output_dir):
+        if tf.io.gfile.exists(self.output_dir):
             ckpt = tf.train.get_checkpoint_state(self.output_dir)
             if ckpt and ckpt.all_model_checkpoint_paths:
                 self.saver.recover_last_checkpoints(list(ckpt.all_model_checkpoint_paths))
@@ -33,7 +33,7 @@ class Saver(object):
             max_to_keep=best_checkpoints,
         )
         # handle disrupted checkpoints
-        if tf.gfile.Exists(self.output_best_dir):
+        if tf.io.gfile.exists(self.output_best_dir):
             ckpt = tf.train.get_checkpoint_state(self.output_best_dir)
             if ckpt and ckpt.all_model_checkpoint_paths:
                 self.best_saver.recover_last_checkpoints(list(ckpt.all_model_checkpoint_paths))
@@ -41,7 +41,7 @@ class Saver(object):
         self.best_score = best_score
         # check best bleu result
         metric_dir = os.path.join(self.output_best_dir, "metric.log")
-        if tf.gfile.Exists(metric_dir):
+        if tf.io.gfile.exists(metric_dir):
             metric_lines = open(metric_dir).readlines()
             if len(metric_lines) > 0:
                 best_score_line = metric_lines[-1]
@@ -52,32 +52,32 @@ class Saver(object):
         topk_dir = os.path.join(self.output_best_dir, "topk_checkpoint")
         ckpt_dir = os.path.join(self.output_best_dir, "checkpoint")
         # direct load the topk information from topk_checkpoints
-        if tf.gfile.Exists(topk_dir):
-            with tf.gfile.Open(topk_dir) as reader:
+        if tf.io.gfile.exists(topk_dir):
+            with tf.io.gfile.GFile(topk_dir) as reader:
                 for line in reader:
                     model_name, score = line.strip().split("\t")
                     self.topk_scores.append((model_name, float(score)))
         # backup plan to normal checkpoints and best scores
-        elif tf.gfile.Exists(ckpt_dir):
-            latest_checkpoint = tf.gfile.Open(ckpt_dir).readline()
+        elif tf.io.gfile.exists(ckpt_dir):
+            latest_checkpoint = tf.io.gfile.GFile(ckpt_dir).readline()
             model_name = latest_checkpoint.strip().split(":")[1].strip()
             model_name = model_name[1:-1]  # remove ""
             self.topk_scores.append((model_name, self.best_score))
         self.best_checkpoints = best_checkpoints
 
-        self.score_record = tf.gfile.Open(metric_dir, mode="a+")
+        self.score_record = tf.io.gfile.GFile(metric_dir, mode="a+")
 
     def save(self, session, step, metric_score=None):
-        if not tf.gfile.Exists(self.output_dir):
-            tf.gfile.MkDir(self.output_dir)
-        if not tf.gfile.Exists(self.output_best_dir):
-            tf.gfile.MkDir(self.output_best_dir)
+        if not tf.io.gfile.exists(self.output_dir):
+            tf.io.gfile.mkdir(self.output_dir)
+        if not tf.io.gfile.exists(self.output_best_dir):
+            tf.io.gfile.mkdir(self.output_best_dir)
 
         self.saver.save(session, os.path.join(self.output_dir, "model"), global_step=step)
 
         def _move(path, new_path):
-            if tf.gfile.Exists(path):
-                if tf.gfile.Exists(new_path):
+            if tf.io.gfile.exists(path):
+                if tf.io.gfile.exists(new_path):
                     tf.gfile.Remove(new_path)
                 tf.gfile.Copy(path, new_path)
 
@@ -101,7 +101,7 @@ class Saver(object):
             ckpt_dir = os.path.join(self.output_best_dir, "checkpoint")
             if len(self.topk_scores) > 0:
                 sorted_topk_scores = sorted(self.topk_scores, key=lambda x: x[1])
-                with tf.gfile.Open(ckpt_dir, mode='w') as writer:
+                with tf.io.gfile.GFile(ckpt_dir, mode='w') as writer:
                     best_ckpt = sorted_topk_scores[-1]
                     writer.write("model_checkpoint_path: \"{}\"\n".format(best_ckpt[0]))
                     for model_name, _ in sorted_topk_scores:
@@ -123,27 +123,27 @@ class Saver(object):
             sorted_topk_scores = sorted(self.topk_scores, key=lambda x: x[1])
             self.topk_scores = sorted_topk_scores[-self.best_checkpoints:]
             topk_dir = os.path.join(self.output_best_dir, "topk_checkpoint")
-            with tf.gfile.Open(topk_dir, mode='w') as writer:
+            with tf.io.gfile.GFile(topk_dir, mode='w') as writer:
                 for model_name, score in self.topk_scores:
                     writer.write("{}\t{}\n".format(model_name, score))
                 writer.flush()
 
     def restore(self, session, path=None, filter_variables=False):
-        if path is not None and tf.gfile.Exists(path):
+        if path is not None and tf.io.gfile.exists(path):
             check_dir = path
         else:
             check_dir = self.output_dir
 
         checkpoint = os.path.join(check_dir, "checkpoint")
-        if not tf.gfile.Exists(checkpoint):
+        if not tf.io.gfile.exists(checkpoint):
             tf.compat.v1.logging.warn("No Existing Model detected")
         else:
-            latest_checkpoint = tf.gfile.Open(checkpoint).readline()
+            latest_checkpoint = tf.io.gfile.GFile(checkpoint).readline()
             model_name = latest_checkpoint.strip().split(":")[1].strip()
             model_name = model_name[1:-1]  # remove ""
             model_path = os.path.join(check_dir, model_name)
             model_path = os.path.abspath(model_path)
-            if not tf.gfile.Exists(model_path+".meta"):
+            if not tf.io.gfile.exists(model_path+".meta"):
                 tf.logging.error("model '{}' does not exists"
                                  .format(model_path))
             else:
@@ -167,7 +167,7 @@ class Saver(object):
                             'global_step' not in name and 'Adam' not in name and
                             ('embedding' not in name or 'pos_embedding' in name)
                         ):
-                            tf.logging.info('{} get initialization from {}'
+                            tf.compat.v1.logging.info('{} get initialization from {}'
                                             .format(name, name))
                             ops.append(
                                 tf.assign(var, reader.get_tensor(name)))

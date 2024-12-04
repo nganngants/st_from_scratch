@@ -45,7 +45,7 @@ def _collect_gradients(gradients, variables):
 
 
 def create_train_op(named_scalars, grads_and_vars, optimizer, global_step, params):
-    tf.get_variable_scope().set_dtype(tf.as_dtype(dtype.floatx()))
+    tf.compat.v1.get_variable_scope().set_dtype(tf.as_dtype(dtype.floatx()))
 
     gradients = [item[0] for item in grads_and_vars]
     variables = [item[1] for item in grads_and_vars]
@@ -112,7 +112,7 @@ def create_train_op(named_scalars, grads_and_vars, optimizer, global_step, param
 
     # apply ema
     if params.ema_decay > 0.:
-        tf.logging.info('Using Exp Moving Average to train the model with decay {}.'.format(params.ema_decay))
+        tf.compat.v1.logging.info('Using Exp Moving Average to train the model with decay {}.'.format(params.ema_decay))
         ema = tf.train.ExponentialMovingAverage(decay=params.ema_decay, num_updates=global_step)
         ema_op = ema.apply(variables)
         with tf.control_dependencies([ops['train_op']]):

@@ -25,7 +25,7 @@ def linear(x, dim, bias=True, ln=False,
     :param scope
     :return:
     """
-    with tf.variable_scope(scope or "linear", values=[x],
+    with tf.compat.v1.variable_scope(scope or "linear", values=[x],
                            dtype=tf.as_dtype(dtype.floatx()),
                            custom_getter=custom_getter):
         if not isinstance(x, (list, tuple)):
@@ -125,7 +125,7 @@ def dot_attention(query, memory, mem_mask, hidden_size,
     :param scope:
     :return: a value matrix, [batch_size, qey_len, mem_dim]
     """
-    with tf.variable_scope(scope or "dot_attention", reuse=tf.AUTO_REUSE,
+    with tf.compat.v1.variable_scope(scope or "dot_attention", reuse=tf.compat.v1.AUTO_REUSE,
                            dtype=tf.as_dtype(dtype.floatx())):
         if memory is None:
             # suppose self-attention from queries alone
@@ -236,7 +236,7 @@ def layer_norm(x, eps=None, scope=None, custom_getter=None):
     """Layer normalization layer"""
     if eps is None:
         eps = dtype.epsilon()
-    with tf.variable_scope(scope or "layer_norm",
+    with tf.compat.v1.variable_scope(scope or "layer_norm",
                            dtype=tf.as_dtype(dtype.floatx()),
                            custom_getter=custom_getter):
         layer_size = util.shape_list(x)[-1]
@@ -254,7 +254,7 @@ def rms_norm(x, eps=None, scope=None):
     """RMS-based Layer normalization layer"""
     if eps is None:
         eps = dtype.epsilon()
-    with tf.variable_scope(scope or "rms_norm",
+    with tf.compat.v1.variable_scope(scope or "rms_norm",
                            dtype=tf.as_dtype(dtype.floatx())):
         layer_size = util.shape_list(x)[-1]
 
@@ -273,7 +273,7 @@ def residual_fn(x, y, dropout=None):
 
 def ffn_layer(x, d, d_o, dropout=None, scope=None):
     """FFN layer in Transformer"""
-    with tf.variable_scope(scope or "ffn_layer",
+    with tf.compat.v1.variable_scope(scope or "ffn_layer",
                            dtype=tf.as_dtype(dtype.floatx())):
         hidden = linear(x, d, scope="enlarge")
         hidden = tf.nn.relu(hidden)

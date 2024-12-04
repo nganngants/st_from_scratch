@@ -255,7 +255,7 @@ flags.DEFINE_string("mode", "train", "train or test or ensemble")
 # saving model configuration
 def save_parameters(params, output_dir):
     if not tf.io.gfile.exists(output_dir):
-        tf.gfile.MkDir(output_dir)
+        tf.io.gfile.mkdir(output_dir)
 
     param_name = os.path.join(output_dir, "param.json")
     with tf.io.gfile.GFile(param_name, "w") as writer:

@@ -54,7 +54,7 @@ def encoder(source, params):
 
     if params.use_nafm:
         x = wavframes
-        with tf.variable_scope("feed_forward"):
+        with tf.compat.v1.variable_scope("feed_forward"):
             y = func.ffn_layer(
                 x,
                 params.filter_size,
@@ -65,7 +65,7 @@ def encoder(source, params):
             x = func.residual_fn(x, y, dropout=params.residual_dropout)
             x = func.layer_norm(x)
 
-        with tf.variable_scope("feed_forward2"):
+        with tf.compat.v1.variable_scope("feed_forward2"):
             y = func.ffn_layer(
                 x,
                 params.filter_size,
@@ -102,7 +102,7 @@ def encoder(source, params):
     inputs = func.layer_norm(inputs)
     inputs = util.valid_apply_dropout(inputs, params.dropout)
 
-    with tf.variable_scope("encoder"):
+    with tf.compat.v1.variable_scope("encoder"):
         x = inputs
         for layer in range(params.num_encoder_layer):
             if params.deep_transformer_init:
@@ -112,8 +112,8 @@ def encoder(source, params):
                     distribution="uniform")
             else:
                 layer_initializer = None
-            with tf.variable_scope("layer_{}".format(layer), initializer=layer_initializer):
-                with tf.variable_scope("self_attention"):
+            with tf.compat.v1.variable_scope("layer_{}".format(layer), initializer=layer_initializer):
+                with tf.compat.v1.variable_scope("self_attention"):
                     # suggest: encoder_localize-> pdp, decoder->none
                     y = func.dot_attention(
                         x,
@@ -130,7 +130,7 @@ def encoder(source, params):
                     x = func.residual_fn(x, y, dropout=params.residual_dropout)
                     x = func.layer_norm(x)
 
-                with tf.variable_scope("feed_forward"):
+                with tf.compat.v1.variable_scope("feed_forward"):
                     y = func.ffn_layer(
                         x,
                         params.filter_size,
@@ -197,7 +197,7 @@ def decoder(target, state, params, labels=None):
 
     inputs = util.valid_apply_dropout(inputs, params.dropout)
 
-    with tf.variable_scope("decoder"):
+    with tf.compat.v1.variable_scope("decoder"):
         x = inputs
         for layer in range(params.num_decoder_layer):
             if params.deep_transformer_init:
@@ -207,8 +207,8 @@ def decoder(target, state, params, labels=None):
                     distribution="uniform")
             else:
                 layer_initializer = None
-            with tf.variable_scope("layer_{}".format(layer), initializer=layer_initializer):
-                with tf.variable_scope("self_attention"):
+            with tf.compat.v1.variable_scope("layer_{}".format(layer), initializer=layer_initializer):
+                with tf.compat.v1.variable_scope("self_attention"):
                     y = func.dot_attention(
                         x,
                         None,
@@ -230,7 +230,7 @@ def decoder(target, state, params, labels=None):
                     x = func.residual_fn(x, y, dropout=params.residual_dropout)
                     x = func.layer_norm(x)
 
-                with tf.variable_scope("cross_attention"):
+                with tf.compat.v1.variable_scope("cross_attention"):
                     y = func.dot_attention(
                         x,
                         state['encodes'],
@@ -251,7 +251,7 @@ def decoder(target, state, params, labels=None):
                     x = func.residual_fn(x, y, dropout=params.residual_dropout)
                     x = func.layer_norm(x)
 
-                with tf.variable_scope("feed_forward"):
+                with tf.compat.v1.variable_scope("feed_forward"):
                     y = func.ffn_layer(
                         x,
                         params.filter_size,
@@ -333,7 +333,7 @@ def decoder(target, state, params, labels=None):
 
 
 def train_fn(features, params, initializer=None):
-    with tf.variable_scope(params.scope_name or "model",
+    with tf.compat.v1.variable_scope(params.scope_name or "model",
                            initializer=initializer,
                            reuse=tf.compat.v1.AUTO_REUSE,
                            dtype=tf.as_dtype(dtype.floatx()),
@@ -352,7 +352,7 @@ def score_fn(features, params, initializer=None):
     params = util.closing_dropout(params)
     params.label_smooth = 0.0
     params.audio_dither=0.0
-    with tf.variable_scope(params.scope_name or "model",
+    with tf.compat.v1.variable_scope(params.scope_name or "model",
                            initializer=initializer,
                            reuse=tf.compat.v1.AUTO_REUSE,
                            dtype=tf.as_dtype(dtype.floatx()),
@@ -372,7 +372,7 @@ def infer_fn(params):
     params.audio_dither=0.0
 
     def encoding_fn(source):
-        with tf.variable_scope(params.scope_name or "model",
+        with tf.compat.v1.variable_scope(params.scope_name or "model",
                                reuse=tf.compat.v1.AUTO_REUSE,
                                dtype=tf.as_dtype(dtype.floatx()),
                                custom_getter=dtype.float32_variable_storage_getter):
@@ -383,7 +383,7 @@ def infer_fn(params):
             return state
 
     def decoding_fn(target, state, time):
-        with tf.variable_scope(params.scope_name or "model",
+        with tf.compat.v1.variable_scope(params.scope_name or "model",
                                reuse=tf.compat.v1.AUTO_REUSE,
                                dtype=tf.as_dtype(dtype.floatx()),
                                custom_getter=dtype.float32_variable_storage_getter):

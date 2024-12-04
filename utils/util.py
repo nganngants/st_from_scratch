@@ -222,11 +222,11 @@ def variable_printer():
 
     for v_name in sorted(list(all_weights)):
         v = all_weights[v_name]
-        tf.logging.info("%s\tshape    %s", v.name[:-2].ljust(80),
+        tf.compat.v1.logging.info("%s\tshape    %s", v.name[:-2].ljust(80),
                         str(v.shape).ljust(20))
         v_size = np.prod(np.array(v.shape.as_list())).tolist()
         total_size += v_size
-    tf.logging.info("Total trainable variables size: %d", total_size)
+    tf.compat.v1.logging.info("Total trainable variables size: %d", total_size)
 
 
 def uniform_splits(total_size, num_shards):
@@ -241,10 +241,10 @@ def uniform_splits(total_size, num_shards):
 def fetch_valid_ref_files(path):
     """Extracting valid reference files according to MT convention"""
     path = os.path.abspath(path)
-    if tf.gfile.Exists(path):
+    if tf.io.gfile.exists(path):
         return [path]
 
-    if not tf.gfile.Exists(path + ".ref0"):
+    if not tf.io.gfile.exists(path + ".ref0"):
         tf.compat.v1.logging.warn("Invalid Reference Format {}".format(path))
         return None
 
@@ -252,7 +252,7 @@ def fetch_valid_ref_files(path):
     files = []
     while True:
         file_path = path + ".ref%s" % num
-        if tf.gfile.Exists(file_path):
+        if tf.io.gfile.exists(file_path):
             files.append(file_path)
         else:
             break

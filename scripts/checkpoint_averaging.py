@@ -29,7 +29,7 @@ def parseargs():
 
 
 def get_checkpoints(path):
-    if not tf.gfile.Exists(os.path.join(path, "checkpoint")):
+    if not tf.io.gfile.exists(os.path.join(path, "checkpoint")):
         raise ValueError("Cannot find checkpoints in %s" % path)
 
     checkpoint_names = []
@@ -49,8 +49,8 @@ def get_checkpoints(path):
 
 
 def checkpoint_exists(path):
-    return (tf.gfile.Exists(path) or tf.gfile.Exists(path + ".meta") or
-            tf.gfile.Exists(path + ".index"))
+    return (tf.io.gfile.exists(path) or tf.io.gfile.exists(path + ".meta") or
+            tf.io.gfile.exists(path + ".index"))
 
 
 def main(_):
@@ -81,7 +81,7 @@ def main(_):
             tensor = reader.get_tensor(name)
             var_dtypes[name] = tensor.dtype
             var_values[name] += tensor
-        tf.logging.info("Read from checkpoint %s", checkpoint)
+        tf.compat.v1.logging.info("Read from checkpoint %s", checkpoint)
 
     # Average checkpoints
     for name in var_values:
@@ -109,7 +109,7 @@ def main(_):
         saved_name = os.path.join(FLAGS.output, "average")
         saver.save(sess, saved_name, global_step=global_step)
 
-    tf.logging.info("Averaged checkpoints saved in %s", saved_name)
+    tf.compat.v1.logging.info("Averaged checkpoints saved in %s", saved_name)
 
     params_pattern = os.path.join(FLAGS.path, "*.json")
     params_files = tf.gfile.Glob(params_pattern)

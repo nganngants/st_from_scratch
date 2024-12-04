@@ -111,7 +111,7 @@ def decoding(session, features, out_seqs, out_scores, dataset, params):
         scores.extend(step_outputs[1])
         indices.extend(step_outputs[2])
 
-        tf.logging.info(
+        tf.compat.v1.logging.info(
             "Decoding Batch {} using {:.3f} s, translating {} "
             "sentences using {:.3f} s in total".format(
                 bidx, time.time() - start_time,
@@ -128,7 +128,7 @@ def decoding(session, features, out_seqs, out_scores, dataset, params):
         scores.extend(step_outputs[1])
         indices.extend(step_outputs[2])
 
-        tf.logging.info(
+        tf.compat.v1.logging.info(
             "Decoding Batch {} using {:.3f} s, translating {} "
             "sentences using {:.3f} s in total".format(
                 'final', time.time() - start_time,
@@ -211,7 +211,7 @@ def scoring(session, features, out_scores, dataset, params):
         total_entropy += step_outputs[2]
         total_tokens += step_outputs[3]
 
-        tf.logging.info(
+        tf.compat.v1.logging.info(
             "Decoding Batch {} using {:.3f} s, translating {} "
             "sentences using {:.3f} s in total".format(
                 bidx, time.time() - start_time,
@@ -230,7 +230,7 @@ def scoring(session, features, out_scores, dataset, params):
         total_entropy += step_outputs[2]
         total_tokens += step_outputs[3]
 
-        tf.logging.info(
+        tf.compat.v1.logging.info(
             "Decoding Batch {} using {:.3f} s, translating {} "
             "sentences using {:.3f} s in total".format(
                 'final', time.time() - start_time,
@@ -257,7 +257,7 @@ def eval_metric(trans, target_file, indices=None):
 
     references = []
     for ref_file in target_valid_files:
-        cur_refs = tf.gfile.Open(ref_file).readlines()
+        cur_refs = tf.io.gfile.GFile(ref_file).readlines()
         cur_refs = [line.strip().split() for line in cur_refs]
         references.append(cur_refs)
 
@@ -271,10 +271,10 @@ def dump_tanslation(tranes, output, indices=None):
     if indices is not None:
         tranes = [data[1] for data in
                   sorted(zip(indices, tranes), key=lambda x: x[0])]
-    with tf.gfile.Open(output, 'w') as writer:
+    with tf.io.gfile.GFile(output, 'w') as writer:
         for hypo in tranes:
             if isinstance(hypo, list):
                 writer.write(' '.join(hypo) + "\n")
             else:
                 writer.write(str(hypo) + "\n")
-    tf.logging.info("Saving translations into {}".format(output))
+    tf.compat.v1.logging.info("Saving translations into {}".format(output))
