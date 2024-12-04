@@ -31,7 +31,7 @@ def beam_search(features, encoding_fn, decoding_fn, params):
         model_state = features["source"]
 
     src_mask = model_state['mask']
-    source_length = tf.to_int32(tf.reduce_sum(src_mask, -1) * beta)
+    source_length = tf.cast(tf.reduce_sum(src_mask, -1) * beta, tf.int32)
     max_target_length = source_length + decode_length
 
     model_state = nest.map_structure(

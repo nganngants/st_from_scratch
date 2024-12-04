@@ -380,4 +380,4 @@ def main(_):
 
 if __name__ == '__main__':
     print(f"Tensorflow version: {tf.__version__}")
-    tf.compat.v1.app.run
+    tf.compat.v1.app.run()

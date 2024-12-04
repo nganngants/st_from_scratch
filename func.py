@@ -197,7 +197,7 @@ def dot_attention(query, memory, mem_mask, hidden_size,
 
                 # only consider absolute relative distance
                 padding = vocab_size - 1
-                mask = tf.to_int32(tf.less(tf.abs(dist), vocab_size))
+                mask = tf.cast(tf.less(tf.abs(dist), vocab_size), tf.int32)
                 dist = mask * tf.abs(dist) + (1 - mask) * tf.ones_like(dist)*padding
 
                 if r_lst is not None:
