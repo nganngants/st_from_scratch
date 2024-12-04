@@ -26,7 +26,7 @@ def stacking(inputs, scale=3, mask=None):
     if mask is not None:
         inputs *= tf.expand_dims(mask, -1)
 
-    num_pad = tf.cast(tf.ceil(tf.divide(max_time, scale)) * scale, tf.int32) - max_time
+    num_pad = tf.cast(tf.math.ceil(tf.divide(max_time, scale)) * scale, tf.int32) - max_time
 
     pads = [[0, 0], [0, num_pad], [0, 0]]
     inputs = tf.pad(inputs, pads)
@@ -38,7 +38,7 @@ def stacking(inputs, scale=3, mask=None):
     concat_inputs = tf.reshape(inputs, (batch_size, -1, num_units * scale))
     if mask is not None:
         concat_mask = tf.reshape(mask, (batch_size, -1, scale))
-        concat_mask = 1. - tf.to_float(tf.less(tf.reduce_sum(concat_mask, -1), scale))
+        concat_mask = 1. - tf.cast(tf.less(tf.reduce_sum(concat_mask, -1), scale), tf.float32)
 
         return concat_inputs, concat_mask
     else:
@@ -93,7 +93,7 @@ def encoder(source, params):
     if params.sinusoid_posenc:
         inputs = func.add_timing_signal(inputs)
     else:
-        pos_emb = tf.get_variable("pos_embedding", [params.max_poslen, params.embed_size])
+        pos_emb = tf.compat.v1.get_variable("pos_embedding", [params.max_poslen, params.embed_size])
 
         ishp = util.shape_list(inputs)
         inputs += tf.expand_dims(pos_emb[:ishp[1]], 0)
@@ -175,10 +175,10 @@ def decoder(target, state, params, labels=None):
 
     embed_name = "embedding" if params.shared_source_target_embedding \
         else "tgt_embedding"
-    tgt_emb = tf.get_variable(embed_name,
+    tgt_emb = tf.compat.v1.get_variable(embed_name,
                               [params.tgt_vocab.size(), params.embed_size],
                               initializer=initializer)
-    tgt_bias = tf.get_variable("bias", [params.embed_size])
+    tgt_bias = tf.compat.v1.get_variable("bias", [params.embed_size])
 
     inputs = tf.gather(tgt_emb, target) * (hidden_size ** 0.5)
     inputs = tf.nn.bias_add(inputs, tgt_bias)
@@ -269,7 +269,7 @@ def decoder(target, state, params, labels=None):
         else "softmax_embedding"
     embed_name = "embedding" if params.shared_source_target_embedding \
         else embed_name
-    softmax_emb = tf.get_variable(embed_name,
+    softmax_emb = tf.compat.v1.get_variable(embed_name,
                                   [params.tgt_vocab.size(), params.embed_size],
                                   initializer=initializer)
     feature = tf.reshape(feature, [-1, params.embed_size])
@@ -307,10 +307,10 @@ def decoder(target, state, params, labels=None):
         # seq dimension transpose
         enc_logits = tf.transpose(enc_logits, (1, 0, 2))
 
-        enc_logits = tf.to_float(enc_logits)
+        enc_logits = tf.cast(enc_logits, tf.float32)
 
         with tf.name_scope('loss'):
-            ctc_loss = tf.nn.ctc_loss(labels, enc_logits, tf.cast(tf.reduce_sum(state['mask'], -1), tf.int32),
+            ctc_loss = tf.compat.v1.nn.ctc_loss(labels, enc_logits, tf.cast(tf.reduce_sum(state['mask'], -1), tf.int32),
                                       ignore_longer_outputs_than_inputs=True,
                                       preprocess_collapse_repeated=params.ctc_repeated)
             ctc_loss /= tf.reduce_sum(mask, -1)
@@ -335,7 +335,7 @@ def decoder(target, state, params, labels=None):
 def train_fn(features, params, initializer=None):
     with tf.variable_scope(params.scope_name or "model",
                            initializer=initializer,
-                           reuse=tf.AUTO_REUSE,
+                           reuse=tf.compat.v1.AUTO_REUSE,
                            dtype=tf.as_dtype(dtype.floatx()),
                            custom_getter=dtype.float32_variable_storage_getter):
         state = encoder(features['source'], params)
@@ -354,7 +354,7 @@ def score_fn(features, params, initializer=None):
     params.audio_dither=0.0
     with tf.variable_scope(params.scope_name or "model",
                            initializer=initializer,
-                           reuse=tf.AUTO_REUSE,
+                           reuse=tf.compat.v1.AUTO_REUSE,
                            dtype=tf.as_dtype(dtype.floatx()),
                            custom_getter=dtype.float32_variable_storage_getter):
         state = encoder(features['source'], params)
@@ -373,7 +373,7 @@ def infer_fn(params):
 
     def encoding_fn(source):
         with tf.variable_scope(params.scope_name or "model",
-                               reuse=tf.AUTO_REUSE,
+                               reuse=tf.compat.v1.AUTO_REUSE,
                                dtype=tf.as_dtype(dtype.floatx()),
                                custom_getter=dtype.float32_variable_storage_getter):
             state = encoder(source, params)
@@ -384,7 +384,7 @@ def infer_fn(params):
 
     def decoding_fn(target, state, time):
         with tf.variable_scope(params.scope_name or "model",
-                               reuse=tf.AUTO_REUSE,
+                               reuse=tf.compat.v1.AUTO_REUSE,
                                dtype=tf.as_dtype(dtype.floatx()),
                                custom_getter=dtype.float32_variable_storage_getter):
             if params.search_mode == "cache":

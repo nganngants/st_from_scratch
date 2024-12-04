@@ -45,7 +45,7 @@ def linear(x, dim, bias=True, ln=False,
                 x_shp = util.shape_list(ix)
                 xsize = x_shp[-1]
 
-                W = tf.get_variable("W_{}_{}".format(oidx, iidx), [xsize, osize], initializer=weight_initializer)
+                W = tf.compat.v1.get_variable("W_{}_{}".format(oidx, iidx), [xsize, osize], initializer=weight_initializer)
                 o = tf.matmul(tf.reshape(ix, [-1, xsize]), W)
 
                 if ln:
@@ -55,7 +55,7 @@ def linear(x, dim, bias=True, ln=False,
             o = tf.add_n(results)
 
             if bias:
-                b = tf.get_variable("b_{}".format(oidx), [osize], initializer=bias_initializer)
+                b = tf.compat.v1.get_variable("b_{}".format(oidx), [osize], initializer=bias_initializer)
                 o = tf.nn.bias_add(o, b)
             x_shp = util.shape_list(x[0])[:-1]
             o = tf.reshape(o, tf.concat([x_shp, [osize]], 0))
@@ -181,13 +181,13 @@ def dot_attention(query, memory, mem_mask, hidden_size,
 
             if localize == "log":
                 dist = tf.abs(dist) + 1
-                log_dist = tf.log(tf.to_float(dist))
+                log_dist = tf.math.log(tf.cast(dist, dtype=tf.float32))
                 if r_lst is not None:
                     log_dist = log_dist[-r_lst:]
                 logits -= tf.expand_dims(tf.expand_dims(log_dist, 0), 0)
             # implementation for the proposed parameterized penalty distance
             elif localize == "pdp":
-                log_dist = tf.log(dtype.tf_to_float(tf.abs(dist) + 1))
+                log_dist = tf.math.log(dtype.tf_to_float(tf.abs(dist) + 1))
                 if r_lst is not None:
                     log_dist = log_dist[-r_lst:]
 
@@ -203,7 +203,7 @@ def dot_attention(query, memory, mem_mask, hidden_size,
                 if r_lst is not None:
                     dist = dist[-r_lst:]
 
-                pos_embedding = tf.get_variable("embeddings", [vocab_size, depth], initializer=tf.ones_initializer())
+                pos_embedding = tf.compat.v1.get_variable("embeddings", [vocab_size, depth], initializer=tf.ones_initializer())
                 # len_Q x len_K x num_heads
                 dist_emb = tf.gather(pos_embedding, dist)
                 dist_emb = tf.transpose(dist_emb, [2, 0, 1])
@@ -241,13 +241,13 @@ def layer_norm(x, eps=None, scope=None, custom_getter=None):
                            custom_getter=custom_getter):
         layer_size = util.shape_list(x)[-1]
 
-        scale = tf.get_variable("scale", [layer_size], initializer=tf.ones_initializer())
-        offset = tf.get_variable("offset", [layer_size], initializer=tf.zeros_initializer())
+        scale = tf.compat.v1.get_variable("scale", [layer_size], initializer=tf.ones_initializer())
+        offset = tf.compat.v1.get_variable("offset", [layer_size], initializer=tf.zeros_initializer())
 
         mean = tf.reduce_mean(x, -1, keep_dims=True)
         var = tf.reduce_mean((x - mean) ** 2, -1, keep_dims=True)
 
-        return scale * (x - mean) * tf.rsqrt(var + eps) + offset
+        return scale * (x - mean) * tf.math.rsqrt(var + eps) + offset
 
 
 def rms_norm(x, eps=None, scope=None):
@@ -258,11 +258,11 @@ def rms_norm(x, eps=None, scope=None):
                            dtype=tf.as_dtype(dtype.floatx())):
         layer_size = util.shape_list(x)[-1]
 
-        scale = tf.get_variable("scale", [layer_size], initializer=tf.ones_initializer())
+        scale = tf.compat.v1.get_variable("scale", [layer_size], initializer=tf.ones_initializer())
 
         ms = tf.reduce_mean(x ** 2, -1, keep_dims=True)
 
-        return scale * x * tf.rsqrt(ms + eps)
+        return scale * x * tf.math.rsqrt(ms + eps)
 
 
 def residual_fn(x, y, dropout=None):
@@ -310,7 +310,7 @@ def add_timing_signal(x, min_timescale=1.0, max_timescale=1.0e4,
         scaled_time = (tf.expand_dims(position, 1) *
                        tf.expand_dims(inv_timescales, 0))
         signal = tf.concat([tf.sin(scaled_time), tf.cos(scaled_time)], axis=1)
-        signal = tf.pad(signal, [[0, 0], [0, tf.mod(channels, 2)]])
+        signal = tf.pad(signal, [[0, 0], [0, tf.math.mod(channels, 2)]])
         signal = tf.reshape(signal, [1, length, channels])
 
         return x + signal
@@ -325,7 +325,7 @@ def attention_bias(inputs, mode, inf=None, name=None):
     with tf.name_scope(name, default_name="attention_bias", values=[inputs]):
         if mode == "causal":
             length = inputs
-            lower_triangle = tf.matrix_band_part(
+            lower_triangle = tf.linalg.band_part(
                 tf.ones([length, length]), -1, 0
             )
             ret = dtype.tf_to_float(inf * (1.0 - lower_triangle))

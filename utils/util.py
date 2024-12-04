@@ -88,7 +88,7 @@ def label_smooth(labels, vocab_size, factor=0.1):
 
         t = tf.one_hot(tf.cast(tf.reshape(labels, [-1]), tf.int32),
                        depth=vocab_size, on_value=p, off_value=q)
-        normalizing = -(p * tf.log(p) + n * q * tf.log(q + 1e-20))
+        normalizing = -(p * tf.math.log(p) + n * q * tf.math.log(q + 1e-20))
     else:
         t = tf.one_hot(tf.cast(tf.reshape(labels, [-1]), tf.int32),
                        depth=vocab_size)
@@ -128,7 +128,7 @@ def embedding_to_padding(emb):
         embedding vector is all zero, and is 0 otherwise.
     """
     emb_sum = tf.reduce_sum(tf.abs(emb), axis=-1)
-    return tf.to_float(tf.equal(emb_sum, 0.0))
+    return tf.cast(tf.equal(emb_sum, 0.0), tf.float32)
 
 
 def shape_list(x):
@@ -199,7 +199,7 @@ def gumbel_noise(shape, eps=None):
         eps = dtype.epsilon()
 
     u = tf.random_uniform(shape, minval=0, maxval=1)
-    return -tf.log(-tf.log(u + eps) + eps)
+    return -tf.math.log(-tf.math.log(u + eps) + eps)
 
 
 def log_prob_from_logits(logits):
@@ -217,7 +217,7 @@ def batch_coordinates(batch_size, beam_size):
 
 def variable_printer():
     """Print parameters"""
-    all_weights = {v.name: v for v in tf.trainable_variables()}
+    all_weights = {v.name: v for v in tf.compat.v1.trainable_variables()}
     total_size = 0
 
     for v_name in sorted(list(all_weights)):
@@ -245,7 +245,7 @@ def fetch_valid_ref_files(path):
         return [path]
 
     if not tf.gfile.Exists(path + ".ref0"):
-        tf.logging.warn("Invalid Reference Format {}".format(path))
+        tf.compat.v1.logging.warn("Invalid Reference Format {}".format(path))
         return None
 
     num = 0
@@ -263,12 +263,12 @@ def fetch_valid_ref_files(path):
 def get_session(gpus):
     """Config session with GPUS"""
 
-    sess_config = tf.ConfigProto(allow_soft_placement=True)
+    sess_config = tf.compat.v1.ConfigProto(allow_soft_placement=True)
     sess_config.gpu_options.allow_growth = True
     if len(gpus) > 0:
         device_str = ",".join([str(i) for i in gpus])
         sess_config.gpu_options.visible_device_list = device_str
-    sess = tf.Session(config=sess_config)
+    sess = tf.compat.v1.Session(config=sess_config)
 
     return sess
 

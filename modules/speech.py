@@ -75,7 +75,7 @@ def compute_mel_filterbank_features(
     # [batch_size]: padding is ok to indicate meaningless points
     wav_lens = tf.reduce_max(
         tf.expand_dims(tf.range(tf.shape(waveforms)[1]), 0) *
-        tf.to_int32(tf.not_equal(waveforms, 0.0)),
+        tf.cast(tf.not_equal(waveforms, 0.0), tf.int32),
         axis=-1) + 1
     # adding small noise to the speech for robust modeling
     if dither > 0:
@@ -111,9 +111,9 @@ def compute_mel_filterbank_features(
     # num_frames: [batch_size] for each sample
     stft_lens = (wav_lens + (frame_step - 1)) // frame_step
     # [batch_size, num_frames]: 1 => valid, 0 => invalid
-    masks = tf.to_float(tf.less_equal(
+    masks = tf.cast(tf.less_equal(
         tf.expand_dims(tf.range(tf.shape(stfts)[1]), 0),
-        tf.expand_dims(stft_lens, 1)))
+        tf.expand_dims(stft_lens, 1)), tf.float32)
 
     # an energy spectrogram is the magnitude of the complex-valued stft.
     # a float32 tensor of shape [batch_size, ?, 257].
@@ -131,7 +131,7 @@ def compute_mel_filterbank_features(
     mel_spectrograms.set_shape(magnitude_spectrograms.shape[:-1].concatenate(
         linear_to_mel_weight_matrix.shape[-1:]))
 
-    log_mel_sgram = tf.log(tf.maximum(log_noise_floor, mel_spectrograms))
+    log_mel_sgram = tf.math.log(tf.maximum(log_noise_floor, mel_spectrograms))
 
     if apply_mask:
         log_mel_sgram *= tf.expand_dims(masks, -1)
@@ -175,11 +175,11 @@ def extract_logmel_features(wav, hparams):
     var_epsilon = 1e-08
     mean = tf.reduce_sum(mel_fbanks * masking, keepdims=True, axis=1) / \
             (tf.reduce_sum(masking, keepdims=True, axis=1) + var_epsilon)
-    sqr_diff = tf.squared_difference(mel_fbanks, mean)
+    sqr_diff = tf.math.squared_difference(mel_fbanks, mean)
     variance = tf.reduce_sum(sqr_diff * masking, keepdims=True, axis=1) / \
                 (tf.reduce_sum(masking, keepdims=True, axis=1) + var_epsilon)
 
-    mel_fbanks = (mel_fbanks - mean) * tf.rsqrt(variance + var_epsilon)
+    mel_fbanks = (mel_fbanks - mean) * tf.math.rsqrt(variance + var_epsilon)
 
     return mel_fbanks, masks, frames
 

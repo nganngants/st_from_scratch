@@ -105,15 +105,15 @@ def train(params):
 
     # Build Graph
     with tf.Graph().as_default():
-        lr = tf.placeholder(tf.as_dtype(dtype.floatx()), [], "learn_rate")
+        lr = tf.compat.v1.placeholder(tf.as_dtype(dtype.floatx()), [], "learn_rate")
 
         # shift automatically sliced multi-gpu process into `zero` manner :)
         features = []
         for fidx in range(max(len(params.gpus), 1)):
             feature = {
-                "source": tf.placeholder(tf.float32, [None, None], "source"),
-                "target": tf.placeholder(tf.int32, [None, None], "target"),
-                "label": tf.sparse_placeholder(tf.int32, name="label"),
+                "source": tf.compat.v1.placeholder(tf.float32, [None, None], "source"),
+                "target": tf.compat.v1.placeholder(tf.int32, [None, None], "target"),
+                "label": tf.compat.v1.sparse_placeholder(tf.int32, name="label"),
             }
             features.append(feature)
 
@@ -124,10 +124,10 @@ def train(params):
         start_time = time.time()
 
         # create global step
-        global_step = tf.train.get_or_create_global_step()
+        global_step = tf.compat.v1.train.get_or_create_global_step()
 
         # set up optimizer
-        optimizer = tf.train.AdamOptimizer(lr,
+        optimizer = tf.compat.v1.train.AdamOptimizer(lr,
                                            beta1=params.beta1,
                                            beta2=params.beta2,
                                            epsilon=params.epsilon)
@@ -153,7 +153,7 @@ def train(params):
         tf.logging.info("End Building Inferring Graph, within {} seconds".format(time.time() - start_time))
 
         # initialize the model
-        sess.run(tf.global_variables_initializer())
+        sess.run(tf.compat.v1.global_variables_initializer())
 
         # log parameters
         util.variable_printer()
@@ -450,7 +450,7 @@ def evaluate(params):
         features = []
         for fidx in range(max(len(params.gpus), 1)):
             feature = {
-                "source": tf.placeholder(tf.float32, [None, None], "source"),
+                "source": tf.compat.v1.placeholder(tf.float32, [None, None], "source"),
             }
             features.append(feature)
 
@@ -472,14 +472,14 @@ def evaluate(params):
         if params.ema_decay > 0.:
             # recover from EMA
             ema = tf.train.ExponentialMovingAverage(decay=params.ema_decay)
-            ema.apply(tf.trainable_variables())
+            ema.apply(tf.compat.v1.trainable_variables())
             ema_assign_op = tf.group(*(tf.assign(var, ema.average(var).read_value())
-                                       for var in tf.trainable_variables()))
+                                       for var in tf.compat.v1.trainable_variables()))
         else:
             ema_assign_op = tf.no_op()
 
         # initialize the model
-        sess.run(tf.global_variables_initializer())
+        sess.run(tf.compat.v1.global_variables_initializer())
 
         # log parameters
         util.variable_printer()
@@ -526,8 +526,8 @@ def scorer(params):
         features = []
         for fidx in range(max(len(params.gpus), 1)):
             feature = {
-                "source": tf.placeholder(tf.float32, [None, None], "source"),
-                "target": tf.placeholder(tf.int32, [None, None], "target"),
+                "source": tf.compat.v1.placeholder(tf.float32, [None, None], "source"),
+                "target": tf.compat.v1.placeholder(tf.int32, [None, None], "target"),
             }
             features.append(feature)
 
@@ -549,14 +549,14 @@ def scorer(params):
         if params.ema_decay > 0.:
             # recover from EMA
             ema = tf.train.ExponentialMovingAverage(decay=params.ema_decay)
-            ema.apply(tf.trainable_variables())
+            ema.apply(tf.compat.v1.trainable_variables())
             ema_assign_op = tf.group(*(tf.assign(var, ema.average(var).read_value())
-                                       for var in tf.trainable_variables()))
+                                       for var in tf.compat.v1.trainable_variables()))
         else:
             ema_assign_op = tf.no_op()
 
         # initialize the model
-        sess.run(tf.global_variables_initializer())
+        sess.run(tf.compat.v1.global_variables_initializer())
 
         # log parameters
         util.variable_printer()

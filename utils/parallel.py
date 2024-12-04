@@ -109,7 +109,7 @@ def data_parallelism(device_type, num_devices, fn, *args, **kwargs):
                     num_devices, tc.training.byte_size_load_fn)
             )
 
-        with tf.variable_scope(tf.get_variable_scope(), reuse=bool(i != 0),
+        with tf.compat.v1.variable_scope(tf.compat.v1.get_variable_scope(), reuse=bool(i != 0),
                                dtype=tf.as_dtype(dtype.floatx())):
             with tf.name_scope("tower_%d" % i):
                 with tf.device(_device_setter):
@@ -157,7 +157,7 @@ def average_gradients(tower_grads, mask=None):
 
         if g0 is None:
             # no gradient for this variable, skip it
-            tf.logging.warn("{} has no gradient".format(v0.name))
+            tf.compat.v1.logging.warn("{} has no gradient".format(v0.name))
             average_grads.append((g0, v0))
             continue
 

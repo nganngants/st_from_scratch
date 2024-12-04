@@ -254,12 +254,12 @@ flags.DEFINE_string("mode", "train", "train or test or ensemble")
 
 # saving model configuration
 def save_parameters(params, output_dir):
-    if not tf.gfile.Exists(output_dir):
+    if not tf.io.gfile.exists(output_dir):
         tf.gfile.MkDir(output_dir)
 
     param_name = os.path.join(output_dir, "param.json")
-    with tf.gfile.Open(param_name, "w") as writer:
-        tf.logging.info("Saving parameters into {}"
+    with tf.io.gfile.GFile(param_name, "w") as writer:
+        tf.compat.v1.logging.info("Saving parameters into {}"
                         .format(param_name))
         writer.write(params.to_json())
 
@@ -269,10 +269,10 @@ def load_parameters(params, output_dir):
     param_name = os.path.join(output_dir, "param.json")
     param_name = os.path.abspath(param_name)
 
-    if tf.gfile.Exists(param_name):
-        tf.logging.info("Loading parameters from {}"
+    if tf.io.gfile.exists(param_name):
+        tf.compat.v1.logging.info("Loading parameters from {}"
                         .format(param_name))
-        with tf.gfile.Open(param_name, 'r') as reader:
+        with tf.io.gfile.GFile(param_name, 'r') as reader:
             json_str = reader.readline()
             params.parse_json(json_str)
     return params
@@ -295,7 +295,7 @@ def setup_recorder(params):
     # trying to load saved recorder
     record_path = os.path.join(params.output_dir, "record.json")
     record_path = os.path.abspath(record_path)
-    if tf.gfile.Exists(record_path):
+    if tf.io.gfile.exists(record_path):
         recorder.load_from_json(record_path)
 
     params.add_hparam('recorder', recorder)
@@ -304,23 +304,23 @@ def setup_recorder(params):
 
 # print model configuration
 def print_parameters(params):
-    tf.logging.info("The Used Configuration:")
+    tf.compat.v1.logging.info("The Used Configuration:")
     for k, v in params.values().items():
-        tf.logging.info("%s\t%s", k.ljust(20), str(v).ljust(20))
-    tf.logging.info("")
+        tf.compat.v1.logging.info("%s\t%s", k.ljust(20), str(v).ljust(20))
+    tf.compat.v1.logging.info("")
 
 
 def main(_):
     # set up logger
-    tf.logging.set_verbosity(tf.logging.INFO)
+    tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
 
-    tf.logging.info("Welcome Using Zero :)")
+    tf.compat.v1.logging.info("Welcome Using Zero :)")
 
     pid = os.getpid()
-    tf.logging.info("Your pid is {0} and use the following command to force kill your running:\n"
+    tf.compat.v1.logging.info("Your pid is {0} and use the following command to force kill your running:\n"
                     "'pkill -9 -P {0}; kill -9 {0}'".format(pid))
     # On clusters, this could tell which machine you are running
-    tf.logging.info("Your running machine name is {}".format(socket.gethostname()))
+    tf.compat.v1.logging.info("Your running machine name is {}".format(socket.gethostname()))
 
     # load registered models
     util.dynamic_load_module(models, prefix="models")
@@ -341,14 +341,14 @@ def main(_):
     # set up random seed
     random.seed(params.random_seed)
     np.random.seed(params.random_seed)
-    tf.set_random_seed(params.random_seed)
+    tf.compat.v1.set_random_seed(params.random_seed)
 
     # loading vocabulary
-    tf.logging.info("Begin Loading Vocabulary")
+    tf.compat.v1.logging.info("Begin Loading Vocabulary")
     start_time = time.time()
     params.src_vocab = Vocab(params.src_vocab_file)
     params.tgt_vocab = Vocab(params.tgt_vocab_file)
-    tf.logging.info("End Loading Vocabulary, Source Vocab Size {}, "
+    tf.compat.v1.logging.info("End Loading Vocabulary, Source Vocab Size {}, "
                     "Target Vocab Size {}, within {} seconds"
                     .format(params.src_vocab.size(), params.tgt_vocab.size(),
                             time.time() - start_time))
@@ -379,5 +379,5 @@ def main(_):
 
 
 if __name__ == '__main__':
-
-    tf.app.run()
+    print(f"Tensorflow version: {tf.__version__}")
+    tf.compat.v1.app.run

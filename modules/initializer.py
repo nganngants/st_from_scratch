@@ -27,8 +27,8 @@ def get_initializer(initializer, initializer_gain):
                                                distribution="uniform",
                                                dtype=tfdtype)
     else:
-        tf.logging.warn("Unrecognized initializer: %s" % initializer)
-        tf.logging.warn("Return to default initializer: glorot_uniform_initializer")
+        tf.compat.v1.logging.warn("Unrecognized initializer: %s" % initializer)
+        tf.compat.v1.logging.warn("Return to default initializer: glorot_uniform_initializer")
         return tf.glorot_uniform_initializer(dtype=tfdtype)
 
 

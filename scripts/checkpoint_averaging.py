@@ -88,21 +88,21 @@ def main(_):
         var_values[name] /= len(checkpoints)
 
     tf_vars = [
-        tf.get_variable(name, shape=var_values[name].shape,
+        tf.compat.v1.get_variable(name, shape=var_values[name].shape,
                         dtype=var_dtypes[name]) for name in var_values
     ]
     placeholders = [tf.placeholder(v.dtype, shape=v.shape) for v in tf_vars]
     assign_ops = [tf.assign(v, p) for (v, p) in zip(tf_vars, placeholders)]
     global_step = tf.Variable(0, name="global_step", trainable=False,
                               dtype=tf.int64)
-    saver = tf.train.Saver(tf.global_variables())
+    saver = tf.compat.v1.train.Saver(tf.global_variables())
 
     sess_config = tf.ConfigProto(allow_soft_placement=True)
     sess_config.gpu_options.allow_growth = True
     sess_config.gpu_options.visible_device_list = "%s" % FLAGS.gpu
 
     with tf.Session(config=sess_config) as sess:
-        sess.run(tf.global_variables_initializer())
+        sess.run(tf.compat.v1.global_variables_initializer())
         for p, assign_op, (name, value) in zip(placeholders, assign_ops,
                                                var_values.items()):
             sess.run(assign_op, {p: value})

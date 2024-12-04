@@ -20,7 +20,7 @@ class Saver(object):
         self.output_dir = output_dir
         self.output_best_dir = os.path.join(output_dir, "best")
 
-        self.saver = tf.train.Saver(
+        self.saver = tf.compat.v1.train.Saver(
             max_to_keep=checkpoints
         )
         # handle disrupted checkpoints
@@ -29,7 +29,7 @@ class Saver(object):
             if ckpt and ckpt.all_model_checkpoint_paths:
                 self.saver.recover_last_checkpoints(list(ckpt.all_model_checkpoint_paths))
 
-        self.best_saver = tf.train.Saver(
+        self.best_saver = tf.compat.v1.train.Saver(
             max_to_keep=best_checkpoints,
         )
         # handle disrupted checkpoints
@@ -136,7 +136,7 @@ class Saver(object):
 
         checkpoint = os.path.join(check_dir, "checkpoint")
         if not tf.gfile.Exists(checkpoint):
-            tf.logging.warn("No Existing Model detected")
+            tf.compat.v1.logging.warn("No Existing Model detected")
         else:
             latest_checkpoint = tf.gfile.Open(checkpoint).readline()
             model_name = latest_checkpoint.strip().split(":")[1].strip()
@@ -156,7 +156,7 @@ class Saver(object):
                     #   is mismatched, where the replicas are missing.
                     # This would happen if you switch from un-cycle mode
                     #   to cycle mode.
-                    tf.logging.warn("Starting Backup Restore")
+                    tf.compat.v1.logging.warn("Starting Backup Restore")
                     ops = []
                     reader = tf.train.load_checkpoint(model_path)
                     for var in tf.global_variables():
@@ -174,6 +174,6 @@ class Saver(object):
                         else:
                             if 'global_step' in name and path is not None:
                                 ops.append(tf.assign(var, 0))
-                            tf.logging.warn("{} is missed".format(name))
+                            tf.compat.v1.logging.warn("{} is missed".format(name))
                     restore_op = tf.group(*ops, name="restore_global_vars")
                     session.run(restore_op)

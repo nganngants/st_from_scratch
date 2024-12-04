@@ -1,6 +1,6 @@
 #! /bin/bash
 
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=0,1
 
 data=path-to-preprocessed-ende-dataset/
 code=path-to-codebase/
@@ -39,7 +39,7 @@ warmup_steps=4000,\
 lrate_strategy="noam",\
 epoches=5000,\
 update_cycle=25,\
-gpus=[0],\
+gpus=[0,1],\
 disp_freq=1,\
 eval_freq=1000,\
 save_freq=2500,\

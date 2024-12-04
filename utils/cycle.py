@@ -37,7 +37,7 @@ def _collect_gradients(gradients, variables):
 
     for grad, var in zip(gradients, variables):
         if isinstance(grad, tf.Tensor):
-            ops.append(tf.assign_add(var, grad))
+            ops.append(tf.compat.v1.assign_add(var, grad))
         else:
             ops.append(tf.scatter_add(var, grad.indices, grad.values))
 
@@ -76,10 +76,10 @@ def create_train_op(named_scalars, grads_and_vars, optimizer, global_step, param
         for name in named_scalars:
             scalar = named_scalars[name]
             named_var = named_vars[name]
-            collect_op = tf.assign_add(named_var, scalar)
+            collect_op = tf.compat.v1.assign_add(named_var, scalar)
             collect_ops.append(collect_op)
         # collect counting variable
-        collect_count_op = tf.assign_add(count_var, 1.0)
+        collect_count_op = tf.compat.v1.assign_add(count_var, 1.0)
         collect_ops.append(collect_count_op)
 
         collect_op = tf.group(*collect_ops, name="collect_op")
@@ -91,8 +91,8 @@ def create_train_op(named_scalars, grads_and_vars, optimizer, global_step, param
             named_scalars[name] = scale * (
                     named_scalars[name] + named_vars[name])
 
-    grand_norm = tf.global_norm(gradients)
-    param_norm = tf.global_norm(variables)
+    grand_norm = tf.linalg.global_norm(gradients)
+    param_norm = tf.linalg.global_norm(variables)
 
     # Gradient clipping
     if isinstance(params.clip_grad_norm or None, float):
