@@ -23,7 +23,7 @@ def model_register(model_name, train_fn, score_fn, infer_fn):
     if model_name in _total_models:
         raise Exception("Conflict Model Name: {}".format(model_name))
 
-    tf.compat.v1.logging.info("Registering model: {}".format(model_name))
+    print("Registering model: {}".format(model_name))
 
     _total_models[model_name] = ModelWrapper(
         train_fn=train_fn,

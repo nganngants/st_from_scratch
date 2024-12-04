@@ -83,11 +83,11 @@ def train(params):
     if params.recorder.estop or \
             params.recorder.epoch > params.epoches or \
             params.recorder.step > params.max_training_steps:
-        tf.compat.v1.logging.info("Stop condition reached, you have finished training your model.")
+        print("Stop condition reached, you have finished training your model.")
         return 0.
 
     # loading dataset
-    tf.compat.v1.logging.info("Begin Loading Training and Dev Dataset")
+    print("Begin Loading Training and Dev Dataset")
     start_time = time.time()
     train_dataset = Dataset(params, params.src_train_file, params.tgt_train_file,
                             params.src_vocab, params.tgt_vocab,
@@ -100,7 +100,7 @@ def train(params):
                           batch_or_token='batch',
                           data_leak_ratio=params.data_leak_ratio,
                           src_audio_path=params.src_dev_path)
-    tf.compat.v1.logging.info(
+    print(
         "End Loading dataset, within {} seconds".format(time.time() - start_time))
 
     # Build Graph
@@ -120,7 +120,7 @@ def train(params):
         # session info
         sess = util.get_session(params.gpus)
 
-        tf.compat.v1.logging.info("Begining Building Training Graph")
+        print("Begining Building Training Graph")
         start_time = time.time()
 
         # create global step
@@ -142,15 +142,15 @@ def train(params):
         vle, ops = cycle.create_train_op({"loss": loss}, gradients,
                                          optimizer, global_step, params)
 
-        tf.compat.v1.logging.info("End Building Training Graph, within {} seconds".format(time.time() - start_time))
+        print("End Building Training Graph, within {} seconds".format(time.time() - start_time))
 
-        tf.compat.v1.logging.info("Begin Building Inferring Graph")
+        print("Begin Building Inferring Graph")
         start_time = time.time()
 
         # set up infer graph
         eval_seqs, eval_scores = tower_infer_graph(features, graph, params)
 
-        tf.compat.v1.logging.info("End Building Inferring Graph, within {} seconds".format(time.time() - start_time))
+        print("End Building Inferring Graph, within {} seconds".format(time.time() - start_time))
 
         # initialize the model
         sess.run(tf.compat.v1.global_variables_initializer())
@@ -165,18 +165,18 @@ def train(params):
             best_checkpoints=params.best_checkpoints,
         )
 
-        tf.compat.v1.logging.info("Training")
+        print("Training")
         cycle_counter = 0
         data_on_gpu = []
         cum_tokens = []
         cum_frames = []
 
         # restore parameters
-        tf.compat.v1.logging.info("Trying restore ASR existing parameters")
+        print("Trying restore ASR existing parameters")
         train_saver.restore(
             sess, path=params.asr_pretrain, filter_variables=params.filter_variables)
 
-        tf.compat.v1.logging.info("Trying restore existing parameters")
+        print("Trying restore existing parameters")
         train_saver.restore(sess)
 
         # setup learning rate
@@ -189,7 +189,7 @@ def train(params):
 
             params.recorder.epoch = epoch
 
-            tf.compat.v1.logging.info("Training the model for epoch {}".format(epoch))
+            print("Training the model for epoch {}".format(epoch))
             size = params.batch_size if params.batch_or_token == 'batch' \
                 else params.token_size
 
@@ -212,7 +212,7 @@ def train(params):
                     if lidx <= params.recorder.lidx:
                         segments = params.recorder.lidx // 5
                         if params.recorder.lidx < 5 or lidx % segments == 0:
-                            tf.compat.v1.logging.info(
+                            print(
                                 "{} Passing {}-th index according to record"
                                 "".format(util.time_str(time.time()), lidx))
 
@@ -290,7 +290,7 @@ def train(params):
 
                     if gstep % params.disp_freq == 0:
                         end_time = time.time()
-                        tf.compat.v1.logging.info(
+                        print(
                             "{} Epoch {}, GStep {}~{}, LStep {}~{}, "
                             "Loss {:.3f}, GNorm {:.3f}, PNorm {:.3f}, Lr {:.5f}, "
                             "Src {}, Tgt {}, Tokens {}, Frames {}, UD {:.3f} s".format(
@@ -316,19 +316,19 @@ def train(params):
                             sess.run(ops['ema_backup_op'])
                             sess.run(ops['ema_assign_op'])
 
-                        tf.compat.v1.logging.info("Start Evaluating")
+                        print("Start Evaluating")
                         eval_start_time = time.time()
                         tranes, scores, indices = evalu.decoding(
                             sess, features, eval_seqs,
                             eval_scores, dev_dataset, params)
                         bleu = evalu.eval_metric(tranes, params.tgt_dev_file, indices=indices)
                         eval_end_time = time.time()
-                        tf.compat.v1.logging.info("End Evaluating")
+                        print("End Evaluating")
 
                         if params.ema_decay > 0.:
                             sess.run(ops['ema_restore_op'])
 
-                        tf.compat.v1.logging.info(
+                        print(
                             "{} GStep {}, Scores {}, BLEU {}, Duration {:.3f} s".format(
                                 util.time_str(eval_end_time), gstep, np.mean(scores),
                                 bleu, eval_end_time - eval_start_time)
@@ -369,18 +369,18 @@ def train(params):
 
                     # trigger temporary sampling
                     if gstep > 0 and gstep % params.sample_freq == 0:
-                        tf.compat.v1.logging.info("Start Sampling")
+                        print("Start Sampling")
                         decode_seqs, decode_scores = sess.run(
                             [eval_seqs[:1], eval_scores[:1]], feed_dict={features[0]["source"]: data["src"][:5]})
                         tranes, scores = evalu.decode_hypothesis(decode_seqs, decode_scores, params)
 
                         for sidx in range(min(5, len(scores))):
                             sample_target = evalu.decode_target_token(data['tgt'][sidx], params.tgt_vocab)
-                            tf.compat.v1.logging.info("{}-th Target: {}".format(sidx, ' '.join(sample_target)))
+                            print("{}-th Target: {}".format(sidx, ' '.join(sample_target)))
                             sample_trans = tranes[sidx]
-                            tf.compat.v1.logging.info("{}-th Translation: {}".format(sidx, ' '.join(sample_trans)))
+                            print("{}-th Translation: {}".format(sidx, ' '.join(sample_trans)))
 
-                        tf.compat.v1.logging.info("End Sampling")
+                        print("End Sampling")
 
                     # trigger stopping
                     if gstep >= params.max_training_steps:
@@ -392,7 +392,7 @@ def train(params):
                     params.recorder.step = int(gstep)
 
             if params.recorder.estop:
-                tf.compat.v1.logging.info("Early Stopped!")
+                print("Early Stopped!")
                 break
 
             # reset to 0
@@ -401,7 +401,7 @@ def train(params):
             adapt_lr.after_epoch(eidx=epoch)
 
     # Final Evaluation
-    tf.compat.v1.logging.info("Start Final Evaluating")
+    print("Start Final Evaluating")
     if params.ema_decay > 0.:
         sess.run(ops['ema_backup_op'])
         sess.run(ops['ema_assign_op'])
@@ -411,12 +411,12 @@ def train(params):
     tranes, scores, indices = evalu.decoding(sess, features, eval_seqs, eval_scores, dev_dataset, params)
     bleu = evalu.eval_metric(tranes, params.tgt_dev_file, indices=indices)
     eval_end_time = time.time()
-    tf.compat.v1.logging.info("End Evaluating")
+    print("End Evaluating")
 
     if params.ema_decay > 0.:
         sess.run(ops['ema_restore_op'])
 
-    tf.compat.v1.logging.info(
+    print(
         "{} GStep {}, Scores {}, BLEU {}, Duration {:.3f} s".format(
             util.time_str(eval_end_time), gstep, np.mean(scores), bleu, eval_end_time - eval_start_time)
     )
@@ -428,21 +428,21 @@ def train(params):
                      "eval-{}.trans.txt".format(gstep)),
         indices=indices)
 
-    tf.compat.v1.logging.info("Your training is finished :)")
+    print("Your training is finished :)")
 
     return train_saver.best_score
 
 
 def evaluate(params):
     # loading dataset
-    tf.compat.v1.logging.info("Begin Loading Test Dataset")
+    print("Begin Loading Test Dataset")
     start_time = time.time()
     test_dataset = Dataset(params, params.src_test_file, params.tgt_test_file,
                            params.src_vocab, params.src_vocab,
                            batch_or_token='batch',
                            data_leak_ratio=params.data_leak_ratio,
                            src_audio_path=params.src_test_path)
-    tf.compat.v1.logging.info(
+    print(
         "End Loading dataset, within {} seconds".format(time.time() - start_time))
 
     # Build Graph
@@ -457,7 +457,7 @@ def evaluate(params):
         # session info
         sess = util.get_session(params.gpus)
 
-        tf.compat.v1.logging.info("Begining Building Evaluation Graph")
+        print("Begining Building Evaluation Graph")
         start_time = time.time()
 
         # get graph
@@ -466,7 +466,7 @@ def evaluate(params):
         # set up infer graph
         eval_seqs, eval_scores = tower_infer_graph(features, graph, params)
 
-        tf.compat.v1.logging.info("End Building Inferring Graph, within {} seconds".format(time.time() - start_time))
+        print("End Building Inferring Graph, within {} seconds".format(time.time() - start_time))
 
         # set up ema
         if params.ema_decay > 0.:
@@ -488,17 +488,17 @@ def evaluate(params):
         eval_saver = saver.Saver(checkpoints=params.checkpoints, output_dir=params.output_dir)
 
         # restore parameters
-        tf.compat.v1.logging.info("Trying restore existing parameters")
+        print("Trying restore existing parameters")
         eval_saver.restore(sess, params.output_dir)
         sess.run(ema_assign_op)
 
-        tf.compat.v1.logging.info("Starting Evaluating")
+        print("Starting Evaluating")
         eval_start_time = time.time()
         tranes, scores, indices = evalu.decoding(sess, features, eval_seqs, eval_scores, test_dataset, params)
         bleu = evalu.eval_metric(tranes, params.tgt_test_file, indices=indices)
         eval_end_time = time.time()
 
-        tf.compat.v1.logging.info(
+        print(
             "{} Scores {}, BLEU {}, Duration {}s".format(
                 util.time_str(eval_end_time), np.mean(scores), bleu, eval_end_time - eval_start_time)
         )
@@ -511,14 +511,14 @@ def evaluate(params):
 
 def scorer(params):
     # loading dataset
-    tf.compat.v1.logging.info("Begin Loading Test Dataset")
+    print("Begin Loading Test Dataset")
     start_time = time.time()
     test_dataset = Dataset(params, params.src_test_file, params.tgt_test_file,
                            params.src_vocab, params.tgt_vocab,
                            batch_or_token='batch',
                            data_leak_ratio=params.data_leak_ratio,
                            src_audio_path=params.src_test_path)
-    tf.compat.v1.logging.info(
+    print(
         "End Loading dataset, within {} seconds".format(time.time() - start_time))
 
     # Build Graph
@@ -534,7 +534,7 @@ def scorer(params):
         # session info
         sess = util.get_session(params.gpus)
 
-        tf.compat.v1.logging.info("Begining Building Evaluation Graph")
+        print("Begining Building Evaluation Graph")
         start_time = time.time()
 
         # get graph
@@ -543,7 +543,7 @@ def scorer(params):
         # set up infer graph
         eval_scores = tower_score_graph(features, graph, params)
 
-        tf.compat.v1.logging.info("End Building Inferring Graph, within {} seconds".format(time.time() - start_time))
+        print("End Building Inferring Graph, within {} seconds".format(time.time() - start_time))
 
         # set up ema
         if params.ema_decay > 0.:
@@ -565,16 +565,16 @@ def scorer(params):
         eval_saver = saver.Saver(checkpoints=params.checkpoints, output_dir=params.output_dir)
 
         # restore parameters
-        tf.compat.v1.logging.info("Trying restore existing parameters")
+        print("Trying restore existing parameters")
         eval_saver.restore(sess, params.output_dir)
         sess.run(ema_assign_op)
 
-        tf.compat.v1.logging.info("Starting Evaluating")
+        print("Starting Evaluating")
         eval_start_time = time.time()
         scores, ppl = evalu.scoring(sess, features, eval_scores, test_dataset, params)
         eval_end_time = time.time()
 
-        tf.compat.v1.logging.info(
+        print(
             "{} Scores {}, PPL {}, Duration {}s".format(
                 util.time_str(eval_end_time), np.mean(scores), ppl, eval_end_time - eval_start_time)
         )

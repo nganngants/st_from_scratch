@@ -259,7 +259,7 @@ def save_parameters(params, output_dir):
 
     param_name = os.path.join(output_dir, "param.json")
     with tf.io.gfile.GFile(param_name, "w") as writer:
-        tf.compat.v1.logging.info("Saving parameters into {}"
+        print("Saving parameters into {}"
                         .format(param_name))
         writer.write(params.to_json())
 
@@ -270,7 +270,7 @@ def load_parameters(params, output_dir):
     param_name = os.path.abspath(param_name)
 
     if tf.io.gfile.exists(param_name):
-        tf.compat.v1.logging.info("Loading parameters from {}"
+        print("Loading parameters from {}"
                         .format(param_name))
         with tf.io.gfile.GFile(param_name, 'r') as reader:
             json_str = reader.readline()
@@ -304,23 +304,23 @@ def setup_recorder(params):
 
 # print model configuration
 def print_parameters(params):
-    tf.compat.v1.logging.info("The Used Configuration:")
+    print("The Used Configuration:")
     for k, v in params.values().items():
-        tf.compat.v1.logging.info("%s\t%s", k.ljust(20), str(v).ljust(20))
-    tf.compat.v1.logging.info("")
+        print("%s\t%s", k.ljust(20), str(v).ljust(20))
+    print("")
 
 
 def main(_):
     # set up logger
     tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.INFO)
 
-    tf.compat.v1.logging.info("Welcome Using Zero :)")
+    print("Welcome Using Zero :)")
 
     pid = os.getpid()
-    tf.compat.v1.logging.info("Your pid is {0} and use the following command to force kill your running:\n"
+    print("Your pid is {0} and use the following command to force kill your running:\n"
                     "'pkill -9 -P {0}; kill -9 {0}'".format(pid))
     # On clusters, this could tell which machine you are running
-    tf.compat.v1.logging.info("Your running machine name is {}".format(socket.gethostname()))
+    print("Your running machine name is {}".format(socket.gethostname()))
 
     # load registered models
     util.dynamic_load_module(models, prefix="models")
@@ -344,11 +344,11 @@ def main(_):
     tf.compat.v1.set_random_seed(params.random_seed)
 
     # loading vocabulary
-    tf.compat.v1.logging.info("Begin Loading Vocabulary")
+    print("Begin Loading Vocabulary")
     start_time = time.time()
     params.src_vocab = Vocab(params.src_vocab_file)
     params.tgt_vocab = Vocab(params.tgt_vocab_file)
-    tf.compat.v1.logging.info("End Loading Vocabulary, Source Vocab Size {}, "
+    print("End Loading Vocabulary, Source Vocab Size {}, "
                     "Target Vocab Size {}, within {} seconds"
                     .format(params.src_vocab.size(), params.tgt_vocab.size(),
                             time.time() - start_time))

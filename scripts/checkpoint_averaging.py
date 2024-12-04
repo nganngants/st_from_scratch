@@ -81,7 +81,7 @@ def main(_):
             tensor = reader.get_tensor(name)
             var_dtypes[name] = tensor.dtype
             var_values[name] += tensor
-        tf.compat.v1.logging.info("Read from checkpoint %s", checkpoint)
+        print("Read from checkpoint %s", checkpoint)
 
     # Average checkpoints
     for name in var_values:
@@ -109,7 +109,7 @@ def main(_):
         saved_name = os.path.join(FLAGS.output, "average")
         saver.save(sess, saved_name, global_step=global_step)
 
-    tf.compat.v1.logging.info("Averaged checkpoints saved in %s", saved_name)
+    print("Averaged checkpoints saved in %s", saved_name)
 
     params_pattern = os.path.join(FLAGS.path, "*.json")
     params_files = tf.gfile.Glob(params_pattern)

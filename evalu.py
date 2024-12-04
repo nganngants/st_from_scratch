@@ -111,7 +111,7 @@ def decoding(session, features, out_seqs, out_scores, dataset, params):
         scores.extend(step_outputs[1])
         indices.extend(step_outputs[2])
 
-        tf.compat.v1.logging.info(
+        print(
             "Decoding Batch {} using {:.3f} s, translating {} "
             "sentences using {:.3f} s in total".format(
                 bidx, time.time() - start_time,
@@ -128,7 +128,7 @@ def decoding(session, features, out_seqs, out_scores, dataset, params):
         scores.extend(step_outputs[1])
         indices.extend(step_outputs[2])
 
-        tf.compat.v1.logging.info(
+        print(
             "Decoding Batch {} using {:.3f} s, translating {} "
             "sentences using {:.3f} s in total".format(
                 'final', time.time() - start_time,
@@ -211,7 +211,7 @@ def scoring(session, features, out_scores, dataset, params):
         total_entropy += step_outputs[2]
         total_tokens += step_outputs[3]
 
-        tf.compat.v1.logging.info(
+        print(
             "Decoding Batch {} using {:.3f} s, translating {} "
             "sentences using {:.3f} s in total".format(
                 bidx, time.time() - start_time,
@@ -230,7 +230,7 @@ def scoring(session, features, out_scores, dataset, params):
         total_entropy += step_outputs[2]
         total_tokens += step_outputs[3]
 
-        tf.compat.v1.logging.info(
+        print(
             "Decoding Batch {} using {:.3f} s, translating {} "
             "sentences using {:.3f} s in total".format(
                 'final', time.time() - start_time,
@@ -277,4 +277,4 @@ def dump_tanslation(tranes, output, indices=None):
                 writer.write(' '.join(hypo) + "\n")
             else:
                 writer.write(str(hypo) + "\n")
-    tf.compat.v1.logging.info("Saving translations into {}".format(output))
+    print("Saving translations into {}".format(output))

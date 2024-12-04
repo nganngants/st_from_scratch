@@ -167,7 +167,7 @@ class Saver(object):
                             'global_step' not in name and 'Adam' not in name and
                             ('embedding' not in name or 'pos_embedding' in name)
                         ):
-                            tf.compat.v1.logging.info('{} get initialization from {}'
+                            print('{} get initialization from {}'
                                             .format(name, name))
                             ops.append(
                                 tf.assign(var, reader.get_tensor(name)))

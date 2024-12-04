@@ -222,11 +222,11 @@ def variable_printer():
 
     for v_name in sorted(list(all_weights)):
         v = all_weights[v_name]
-        tf.compat.v1.logging.info("%s\tshape    %s", v.name[:-2].ljust(80),
+        print("%s\tshape    %s", v.name[:-2].ljust(80),
                         str(v.shape).ljust(20))
         v_size = np.prod(np.array(v.shape.as_list())).tolist()
         total_size += v_size
-    tf.compat.v1.logging.info("Total trainable variables size: %d", total_size)
+    print("Total trainable variables size: %d", total_size)
 
 
 def uniform_splits(total_size, num_shards):

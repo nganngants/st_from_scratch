@@ -112,7 +112,7 @@ def create_train_op(named_scalars, grads_and_vars, optimizer, global_step, param
 
     # apply ema
     if params.ema_decay > 0.:
-        tf.compat.v1.logging.info('Using Exp Moving Average to train the model with decay {}.'.format(params.ema_decay))
+        print('Using Exp Moving Average to train the model with decay {}.'.format(params.ema_decay))
         ema = tf.train.ExponentialMovingAverage(decay=params.ema_decay, num_updates=global_step)
         ema_op = ema.apply(variables)
         with tf.control_dependencies([ops['train_op']]):
